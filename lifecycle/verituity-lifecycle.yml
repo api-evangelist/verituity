@@ -1,0 +1,98 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  Searched the full verituity.com surface (sitemap walked, every page fetched) for a versioning
+  policy, a deprecation policy, a changelog, an SLA and a status page. Only the version scheme was
+  found. The absences below were each probed, not assumed.
+versioning:
+  scheme: URI path
+  current_version: v1
+  base_url: https://platform.dev.verituityplatform.com/v1
+  policy_published: false
+  policy_note: >-
+    The API is versioned in the path but Verituity publishes no versioning policy — no statement of
+    what constitutes a breaking change, no support window for a prior major version, and no
+    announcement channel for changes.
+  header_versioning: false
+deprecation:
+  policy_published: false
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  deprecated_operations: []
+  note: >-
+    No deprecation policy, and no RFC 8594 Sunset/Deprecation header behaviour is documented or was
+    observed. No `Deprecation` pointer is emitted in apis.yml, because none exists to point at.
+changelog:
+  published: false
+  probes:
+  - url: https://verituity.com/changelog
+    status: 404
+  note: >-
+    There is no API changelog or release-notes feed. The nearest thing Verituity publishes is a
+    company Newsroom of press releases (funding, partnerships, podcast appearances), which is not
+    a record of API change. No `ChangeLog` pointer is emitted.
+  newsroom: https://verituity.com/newsroom
+status_page:
+  published: false
+  probes:
+  - url: https://verituity.com/status
+    status: 404
+  - host: status.verituity.com
+    dns: NXDOMAIN
+  note: >-
+    No status page and no status subdomain. For a service that sits inline in an authorization path
+    before money moves, this is the most consequential operational gap on the profile: a payer has
+    no public signal to distinguish a Verituity outage from their own. No `StatusPage` pointer is
+    emitted.
+sla:
+  published: false
+  availability_target: null
+  performance_target:
+    p95_latency: <300ms
+    source: https://verituity.com/developers
+    note: >-
+      A marketing performance figure printed on the developer portal, and echoed by a `latency_ms`
+      field in every response. It is not an SLA — no availability percentage, credit schedule, or
+      support-response commitment is published.
+support:
+  channels:
+  - type: email
+    value: info@verituity.com
+    purpose: sales and general
+  - type: email
+    value: media@verituity.com
+    purpose: press
+  - type: form
+    value: 'Request a Demo (#contact)'
+  support_center:
+    published: false
+    note: >-
+      A "Support Center — Guides and help for platform clients" entry exists in the site navigation
+      source but is commented out and has no live URL; it appears to be a planned surface.
+maturity:
+  stage: production
+  evidence: >-
+    Named production deployments: a global transaction bank running a white-labeled payout platform
+    since 2021 with $45B+ in volume to 140+ countries, Citizens Payee Select (announced April 2025
+    with an equity investment from Citizens Financial Group), a Fortune 500 insurer live in under
+    six weeks, and partnerships with Mastercard, Guidehouse and Sagent.
+  urls:
+  - https://verituity.com/
+  - https://verituity.com/newsroom
+  api_stage: >-
+    The API surface itself is earlier than the business. The published base URL is a `dev` host, the
+    portal's explorer is simulated, and live access is gated behind a demo request.
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/changelog
+  status: 404
+- url: https://verituity.com/status
+  status: 404
+- url: https://verituity.com/support
+  status: 404
+- url: https://verituity.com/newsroom
+  status: 200

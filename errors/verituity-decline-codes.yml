@@ -1,0 +1,143 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  Verituity is an authorization-time verification provider: its API's job is to say approve /
+  review / deny on a payee, an identity and a bank account BEFORE a payout is released. Its
+  reason_code registry is therefore the direct analogue of a card network's decline-code table,
+  and it is the operative field for an integrator — the HTTP status is 200 whether the payee was
+  approved or denied. Codes below are transcribed verbatim from the reason-code map Verituity
+  publishes in its own developer-portal explorer; none are inferred.
+envelope:
+  location: results.<module>.reason_code
+  decision_field: results.<module>.decision
+  score_field: results.<module>.score
+  tier_field: results.<module>.tier
+  http_status_on_decline: 200
+  note: >-
+    A deny is a successful API call. Integrators reading only the HTTP status will treat every
+    blocked payee as a pass.
+decisions:
+- value: approve
+  meaning: The module confirmed the payee/account. Safe to release under the payer's policy.
+- value: review
+  meaning: The module could not confirm or disconfirm. Routed to a human exception queue.
+- value: deny
+  meaning: The module disconfirmed. The payment is held.
+modules:
+- id: organization_identity
+  label: Organization Identity
+- id: individual_identity
+  label: Individual Identity
+- id: payment_method
+  label: Payment Method Validation
+- id: payee_qualification
+  label: Payee Eligibility (PQS)
+decline_codes:
+- code: ORG_MATCH_CONFIRMED
+  module: organization_identity
+  decision: approve
+  meaning: The organization payee of record matched across the data sources consulted.
+  action: Release under payer policy.
+- code: ORG_PARTIAL_MATCH
+  module: organization_identity
+  decision: review
+  meaning: Some organization attributes matched and others did not.
+  action: Work the exception; correct the payee record or supply the enhanced fields (tax_id).
+- code: ORG_NO_MATCH
+  module: organization_identity
+  decision: deny
+  meaning: The organization could not be matched.
+  action: Hold. Do not release; re-verify the payee of record at source.
+- code: IDENTITY_CONFIRMED
+  module: individual_identity
+  decision: approve
+  meaning: The individual payee's identity was confirmed.
+  action: Release under payer policy.
+- code: IDENTITY_PARTIAL_MATCH
+  module: individual_identity
+  decision: review
+  meaning: Partial identity corroboration only.
+  action: Work the exception; supply date_of_birth / tax_id to lift the module to the enhanced tier.
+- code: IDENTITY_NO_MATCH
+  module: individual_identity
+  decision: deny
+  meaning: The individual's identity could not be corroborated.
+  action: Hold.
+- code: ACCOUNT_OPEN_OWNER_MATCH
+  module: payment_method
+  decision: approve
+  meaning: The bank account is open and the account owner matches the payee of record.
+  action: Release under payer policy.
+- code: OWNER_MATCH_CONFIRMED
+  module: payment_method
+  decision: approve
+  meaning: >-
+    Account ownership confirmed. Published on the Verification-as-a-Service page as the
+    enhanced-tier approve code for payment_method.
+  action: Release under payer policy.
+  source: https://verituity.com/solution-verification-as-a-service
+- code: OWNERSHIP_UNVERIFIED
+  module: payment_method
+  decision: review
+  meaning: The account exists but ownership could not be tied to the payee.
+  action: Work the exception before releasing to that account.
+- code: ACCOUNT_CLOSED
+  module: payment_method
+  decision: deny
+  meaning: The destination bank account is closed.
+  action: Hold. Collect a new payment instrument from the payee.
+- code: ELIGIBLE
+  module: payee_qualification
+  decision: approve
+  meaning: The payee qualifies today under the payer's eligibility policy.
+  action: Release.
+- code: MANUAL_REVIEW_REQUIRED
+  module: payee_qualification
+  decision: review
+  meaning: Eligibility rules did not resolve automatically.
+  action: Payer admin review. Only a payer admin can override a hold.
+- code: INELIGIBLE
+  module: payee_qualification
+  decision: deny
+  meaning: The payee does not qualify under the payer's rules (e.g. a required registration is missing).
+  action: Hold. Improper-payment prevention path.
+- code: LIMITED_DATA_CORROBORATION
+  modules: [organization_identity, individual_identity]
+  decision: overrides the module decision on the thin-file path
+  meaning: >-
+    Too little source data existed to corroborate the payee. Returned on the `thin_file` test path.
+  action: Escalate for additional documentation rather than treating as a clean deny.
+- code: WATCHLIST_POTENTIAL_MATCH
+  modules: [organization_identity, individual_identity, payee_qualification]
+  decision: overrides the module decision on the watchlist path
+  meaning: >-
+    A potential watchlist/sanctions hit (OFAC and program lists are named on the Eligibility page).
+    Returned on the `watchlist_hit` test path.
+  action: Compliance review. Do not release on an unresolved potential match.
+- code: ACCOUNT_RECENTLY_CHANGED
+  module: payment_method
+  decision: overrides the module decision on the account-change path
+  meaning: >-
+    The payee's bank account details changed recently — the classic payee-impersonation and
+    business-email-compromise signal. Returned on the `account_changed` test path.
+  action: Re-verify the change out of band with the payee before releasing.
+masked_to_buyers:
+  documented: false
+  note: >-
+    Verituity does not publish which reason codes, if any, are suppressed from a payee-facing
+    surface. Not asserted either way.
+coverage:
+  code_count: 16
+  completeness: >-
+    PARTIAL AND KNOWN TO BE. These are the codes exercised by the four sandbox test outcomes and
+    four test paths Verituity ships in its explorer. There is no published exhaustive reason-code
+    reference, so a production integration will encounter codes not listed here.
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/developers.js
+  status: 200
+- url: https://verituity.com/solution-verification-as-a-service
+  status: 200

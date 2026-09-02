@@ -1,0 +1,108 @@
+generated: '2026-09-02'
+method: derived
+source: >-
+  https://verituity.com/developers and its provider-authored explorer source
+  https://verituity.com/developers.js — the request builder and the response renderer, which
+  together enumerate every field the API sends and receives.
+note: >-
+  DERIVED FROM DOCUMENTED PAYLOADS, NOT FROM A SPEC. Verituity publishes no OpenAPI and no schema
+  document, so there are no $refs to walk. The entity graph below is reconstructed from the exact
+  request payload Verituity's own code samples emit and the exact response object its viewer
+  renders. Field types are inferred from the published example values and are marked where
+  uncertain. Nothing here is invented; anything not published is recorded as unknown.
+entities:
+- name: verification
+  description: One verification inquiry. The root object of the API.
+  id_prefix:
+    sandbox: vrf_sbx_
+    live: 'unknown — only the sandbox prefix is published'
+  fields:
+  - {name: id, type: string, description: inquiry identifier}
+  - {name: object, type: string, const: verification}
+  - {name: livemode, type: boolean, description: false in sandbox}
+  - {name: status, type: string, enum: [complete, pending]}
+  - {name: latency_ms, type: integer}
+  - {name: results, type: object, description: 'map of module id -> verification_result'}
+  - {name: received, type: array, description: 'module ids accepted; present on the pending (202) response only'}
+  - {name: poll_url, type: string, description: '/v1/verifications/{id}; pending response only'}
+  - {name: estimated_completion, type: string, description: 'e.g. "<=5 min"; pending response only'}
+  - {name: billing, type: object, description: billing_summary}
+- name: payee
+  description: The party being verified. Supplied on the request; not returned as a stored resource.
+  identity: 'no id field is published — the payee is described by value on each inquiry'
+  fields:
+  - {name: type, type: string, enum: [organization, individual], required: true}
+  - {name: name, type: string, description: 'legal name (organization) or full name (individual)'}
+  - {name: address, type: string, description: single-line postal address}
+  - {name: email, type: string}
+  - {name: phone, type: string, format: E.164}
+  - {name: date_of_birth, type: string, format: 'YYYY-MM-DD', applies_to: individual, tier: enhanced}
+  - {name: tax_id, type: string, description: 'EIN (organization) or SSN (individual)', tier: enhanced}
+  - {name: payment_account, type: object, description: payment_account}
+- name: payment_account
+  description: The destination bank account whose existence and ownership are checked.
+  fields:
+  - {name: routing_number, type: string, description: US ABA routing number}
+  - {name: account_number, type: string}
+  note: >-
+    The Verification-as-a-Service page shows the account number masked in the response echo
+    (****6526), so the API appears to return a masked form rather than the submitted value.
+- name: verification_result
+  description: One module's answer. The unit an integrator actually reads.
+  fields:
+  - {name: decision, type: string, enum: [approve, review, deny]}
+  - {name: tier, type: string, enum: [basic, enhanced, single, tbd]}
+  - {name: reason_code, type: string, description: 'see errors/verituity-decline-codes.yml'}
+  - {name: score, type: number, description: '0.0-1.0 confidence'}
+- name: module
+  description: A purchasable verification check. Selected per request; also the billing unit.
+  instances:
+  - {id: organization_identity, label: Organization Identity, tier_type: dual}
+  - {id: individual_identity, label: Individual Identity, tier_type: single}
+  - {id: payment_method, label: Payment Method Validation, tier_type: dual}
+  - {id: payee_qualification, label: 'Payee Eligibility (PQS)', tier_type: quoted}
+- name: billing_summary
+  description: What the inquiry cost, or would have cost.
+  fields:
+  - {name: test_mode, type: boolean}
+  - {name: billed, type: boolean}
+  - {name: would_bill, type: array, description: 'array of billing_line'}
+- name: billing_line
+  fields:
+  - {name: module, type: string}
+  - {name: tier, type: string}
+  - {name: amount, type: number, nullable: true, description: 'null for the quoted PQS module'}
+relationships:
+- {from: verification, to: payee, kind: has_one, via: 'request body payee', note: 'by value, not by reference — there is no payee resource to fetch'}
+- {from: payee, to: payment_account, kind: has_one, via: payee.payment_account}
+- {from: verification, to: verification_result, kind: has_many, via: 'results keyed by module id'}
+- {from: verification_result, to: module, kind: belongs_to, via: 'the results map key'}
+- {from: verification, to: billing_summary, kind: has_one, via: billing}
+- {from: billing_summary, to: billing_line, kind: has_many, via: would_bill}
+- {from: verification_result, to: reason_code, kind: belongs_to, via: reason_code, catalog: errors/verituity-decline-codes.yml}
+id_prefixes:
+- {prefix: 'vrf_sbx_', entity: verification, environment: sandbox}
+- {prefix: 'vc_sbx_', entity: 'api client id', environment: sandbox}
+- {prefix: 'idmp_', entity: 'idempotency key', note: 'client-generated; Verituity''s sample generator''s convention, not a server requirement'}
+observations:
+- >-
+  THE GRAPH IS DELIBERATELY FLAT. There is no payee resource, no account resource and no customer
+  resource — nothing is stored and re-referenced by id. Every inquiry carries its subject by value.
+  That is a real design decision for a verification API (nothing to keep in sync, nothing to
+  breach), and it means an integrator gets no list/search surface and cannot ask "what did we
+  decide about this payee last month" through the public API.
+- >-
+  The tier is derived from the payload rather than declared, which couples the data model directly
+  to the price: adding tax_id to a payee object silently doubles the cost of an
+  organization_identity check.
+gaps:
+- No published schema, JSON Schema, or field-level type/length/format constraints.
+- No enumeration of the full reason_code domain (see errors/verituity-decline-codes.yml).
+- No documented shape for the Connect, Detect, Eligibility, Pay or Explain services — only Verify.
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/developers.js
+  status: 200
+- url: https://verituity.com/solution-verification-as-a-service
+  status: 200

@@ -1,0 +1,77 @@
+generated: '2026-09-02'
+method: probed
+source: >-
+  Direct HTTP probes of the named /.well-known/ path list against the Verituity marketing/docs host
+  (verituity.com) and the published API base host (platform.dev.verituityplatform.com, the base_url
+  printed on https://verituity.com/developers).
+note: >-
+  NO HIT. Every named path returned 404 on both hosts, and the negative control also returned 404,
+  so neither host is a path-echoing or SPA catch-all — these are genuine, clean absences. Because
+  nothing was served, this manifest carries NO WellKnown and NO SecurityTxt pointer in apis.yml:
+  the file records an absence, and a pointer would assert a surface Verituity does not serve.
+hit_count: 0
+hosts:
+- host: https://verituity.com
+  path_echo_control: passed
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/ai-plugin.json
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+  - path: /.well-known/verituity-negative-control-7f3ab91c.json
+    status: 404
+    file: null
+    note: negative control — a path that cannot exist; 404 confirms the host does not echo paths
+- host: https://platform.dev.verituityplatform.com
+  path_echo_control: passed
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+    file: null
+  - path: /.well-known/openid-configuration
+    status: 404
+    file: null
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+    file: null
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+    file: null
+  - path: /.well-known/api-catalog
+    status: 404
+    file: null
+  - path: /.well-known/agent-card.json
+    status: 404
+    file: null
+  - path: /.well-known/agent.json
+    status: 404
+    file: null
+x-evidence:
+  checked: '2026-09-02'
+  observations:
+  - >-
+    The API host answers 401 with `WWW-Authenticate: Bearer realm="verification-api-dev"` on
+    POST /v1/verifications but publishes no RFC 8414 / RFC 9728 discovery document, so an agent
+    cannot machine-discover the token endpoint.
+  - >-
+    Neither verituity.com nor platform.dev.verituityplatform.com serves an RFC 9116 security.txt.

@@ -1,0 +1,119 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  Verituity ships a genuine self-describing sandbox contract on its developer portal: a separate
+  base URL, an instant credential-provisioning flow, deterministic outcome-forcing headers with a
+  published value set, and a billing block that shows what a call would have cost live. Everything
+  below is transcribed from the provider's own page and its explorer source. The portal is explicit
+  that the embedded explorer returns SIMULATED responses and that keys it generates are examples
+  which "will not authenticate against the API" — live sandbox access is requested from Verituity.
+environments:
+- name: sandbox
+  base_url: https://platform.dev.verituityplatform.com/v1
+  livemode: false
+  billed: false
+  provisioning: >-
+    "Provisioned instantly for staging. Your secret is shown once. Verituity never retains it."
+  parity_claim: >-
+    "Sandbox traffic runs the full auth and event lifecycle, identically to production."
+  auth: OAuth 2.0 machine-to-machine client scoped to the sandbox
+- name: production
+  base_url: null
+  livemode: true
+  auth: certificate-bound mTLS (RFC 8705)
+  access: 'by request — "Ask us about live sandbox access" / Request a Demo'
+credentials:
+  fields:
+  - api_client_id
+  - client_secret
+  key_prefixes:
+    api_client_id: vc_sbx_
+    client_secret: sk_sbx_
+  one_time_secret: true
+  isolation: per-client data isolation
+  note: >-
+    Prefixes are the documented credential FORMAT. No real key material is recorded here, and none
+    is published by Verituity — the portal generates disposable example strings client-side.
+test_controls:
+  headers:
+  - name: X-Sandbox-Test-Outcome
+    purpose: force the decision returned by every selected module
+    determinism: 'Deterministic, every time.'
+    values:
+    - value: approve
+      effect: every module returns decision approve with a score in the 0.90-0.99 band
+    - value: review
+      effect: every module returns decision review with a score in the 0.55-0.75 band
+    - value: deny
+      effect: every module returns decision deny with a score in the 0.05-0.35 band
+    - value: async
+      label: Async IOU
+      effect: >-
+        returns HTTP 202 with status pending, a poll_url of /v1/verifications/{id} and
+        estimated_completion "<=5 min" — the way to rehearse the asynchronous path
+  - name: X-Sandbox-Test-Path
+    purpose: force a specific edge-case reason_code independent of the outcome
+    values:
+    - value: default
+      effect: the module's normal reason_code for the chosen outcome
+    - value: thin_file
+      effect: identity modules return LIMITED_DATA_CORROBORATION
+    - value: watchlist_hit
+      effect: identity and eligibility modules return WATCHLIST_POTENTIAL_MATCH
+    - value: account_changed
+      effect: payment_method returns ACCOUNT_RECENTLY_CHANGED
+  note: >-
+    This pair is the most valuable thing on the portal for an agent: the four outcomes crossed with
+    the four paths let an integrator rehearse a sanctions hit, a thin-file payee and a
+    recently-changed bank account — the three cases that actually stop a payout — without a live
+    credential and without a charge.
+test_fixtures:
+  note: >-
+    Verituity pre-fills its explorer with two synthetic payees. They are illustrative sample data
+    published by Verituity, not certified test identities, and there is no published statement that
+    they behave specially against the live sandbox.
+  organization:
+    name: Northwind Logistics LLC
+    address: 1200 Harbor Blvd, Tacoma, WA 98402
+    email: ap@northwindlogistics.com
+    phone: '+1 253 555 0142'
+    routing_number: '125000024'
+  individual:
+    name: Dana R. Whitfield
+    address: 88 Linden Ave, Apt 4, Tacoma, WA 98402
+    phone: '+1 253 555 0199'
+    date_of_birth: '1986-04-12'
+    routing_number: '125000024'
+  note_on_identifiers: >-
+    The sample tax_id and account_number values printed on the page are synthetic form-filler
+    values and are deliberately not transcribed into this artifact.
+test_ids:
+  verification_id_prefix: vrf_sbx_
+  idempotency_key_prefix: idmp_
+billing_in_test_mode:
+  test_mode: true
+  billed: false
+  would_bill: >-
+    Array of {module, tier, amount} showing exactly what the identical live call would cost. This
+    makes the sandbox a pricing dry run as well as a behavioural one.
+  see: plans/verituity-plans-pricing.yml
+time_simulation:
+  supported: false
+  note: No test clocks or time-travel fixtures are published.
+gaps:
+- >-
+    No self-serve live sandbox: keys generated in the portal are explicitly non-functional, so a
+    developer cannot make a real call without contacting Verituity.
+- No published list of magic account numbers or routing numbers that force specific bank outcomes.
+- No sandbox reset/teardown, seeded data catalogue, or fixture API.
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/developers.js
+  status: 200
+  note: provider-authored explorer source; header names, value sets and prefixes read verbatim from it
+- url: https://platform.dev.verituityplatform.com/v1/verifications
+  status: 401
+  note: the sandbox base URL is a real, live host that challenges for a bearer token

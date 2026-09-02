@@ -1,0 +1,72 @@
+generated: '2026-09-02'
+method: probed
+source: >-
+  Live unauthenticated probe of https://platform.dev.verituityplatform.com/v1/verifications, plus
+  the response semantics published at https://verituity.com/developers
+format: custom
+rfc9457: false
+note: >-
+  Verituity publishes no OpenAPI, so there are no 4xx/5xx response objects to derive from. The
+  envelope below is the one the live API actually returned on an unauthenticated request. It is a
+  flat {error, status} object — NOT application/problem+json, so it carries no `type` URI, no
+  `title`, no `detail` and no `instance`, and an agent has nothing to dereference for remediation.
+envelope:
+  media_type: application/json
+  shape:
+    error: machine-readable slug
+    status: integer, mirrors the HTTP status
+  example_observed: '{"error":"unauthorized","status":401}'
+problem_types:
+- name: unauthorized
+  status: 401
+  observed: true
+  media_type: application/json
+  body: '{"error":"unauthorized","status":401}'
+  www_authenticate: 'Bearer realm="verification-api-dev"'
+  cause: >-
+    No Authorization header, or an expired/invalid OAuth 2.0 machine-to-machine access token.
+  remediation: >-
+    Obtain a client-credentials access token for the api_client_id / client_secret pair issued for
+    the environment, and present it as `Authorization: Bearer <token>`. Production additionally
+    requires a certificate-bound token (mTLS, RFC 8705).
+  headers_observed:
+    cache-control: no-store
+    x-content-type-options: nosniff
+    server: istio-envoy
+  source: https://platform.dev.verituityplatform.com/v1/verifications
+- name: validation_no_modules
+  status: null
+  observed: false
+  cause: >-
+    A request declaring no verification modules. Verituity's own client-side explorer refuses this
+    with "Select at least one module to verify." — so the constraint is documented, but the
+    server-side status code and body for it are not published and were not probed (probing would
+    require credentials).
+  remediation: Send at least one entry in `modules[]`.
+  confidence: low
+gaps:
+  note: >-
+    THE ERROR REFERENCE IS THE BIGGEST DOCUMENTATION GAP ON THIS API. Verituity documents the happy
+    path and the decision semantics thoroughly, but publishes no error-code reference at all: no
+    4xx catalogue, no validation error shape, no rate-limit or quota error, no 5xx behaviour, and
+    no retry guidance. Everything above the 401 is unknown to an integrator until they hit it in
+    production.
+  missing:
+  - 400 / 422 validation error shape and field-level error reporting
+  - 403 (authenticated but not entitled to a module, e.g. PQS before a quote)
+  - 404 on GET /v1/verifications/{id} for an unknown or expired inquiry id
+  - 409 semantics for an Idempotency-Key replayed with a different body
+  - 429 and its retry signalling
+  - 5xx behaviour and whether an inquiry is billed when the upstream data source fails
+see:
+  decision_codes: errors/verituity-decline-codes.yml
+  note: >-
+    A denied payee is NOT an error — it returns 200 with decision `deny` and a reason_code. The
+    decline-code catalogue is where an agent reads why a payment was held.
+x-evidence:
+- url: https://platform.dev.verituityplatform.com/v1/verifications
+  status: 401
+  method: POST
+  content_type: application/json
+- url: https://verituity.com/developers
+  status: 200

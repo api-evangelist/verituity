@@ -1,0 +1,44 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+limit_count: 0
+note: >-
+  NO PUBLISHED RATE LIMITS. Verituity's developer portal documents authentication, idempotency,
+  sandbox test controls, per-module pricing and a p95 latency figure, but states no request quota,
+  no burst allowance, no window, and names no rate-limit response headers or exhaustion status
+  code. Nothing in the site or on the live API advertises a limit. This is an honest zero, not an
+  unchecked field — the surfaces below were read and probed.
+rate_limits: []
+response_headers:
+  documented: []
+  observed: []
+  note: >-
+    The live 401 from POST /v1/verifications carried cache-control, content-type,
+    www-authenticate, x-content-type-options, date, content-length, x-envoy-upstream-service-time
+    and server — no X-RateLimit-*, no RateLimit-*, no Retry-After. An unauthenticated probe cannot
+    prove authenticated responses omit them, so this is recorded as "not observed", not "absent".
+exhaustion:
+  status_code: null
+  retry_after: null
+commercial_throttle:
+  model: per-inquiry billing rather than a request quota
+  note: >-
+    The governing constraint on this API is price, not a rate limit: each module invocation is
+    billed per inquiry ($1.00-$3.00 depending on module and tier), and the only documented relief
+    is that "Idempotent retries are not re-billed." An agent budgeting calls against this API
+    should reason about cost per call, not about a quota.
+  see: plans/verituity-plans-pricing.yml
+latency:
+  p95_target: <300ms
+  response_field: latency_ms
+  note: A published performance figure, not a contractual SLA and not a rate limit.
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+  note: read in full; no limits, quotas, windows or rate-limit headers stated anywhere on the page
+- url: https://platform.dev.verituityplatform.com/v1/verifications
+  status: 401
+  note: live response headers inspected; no rate-limit headers present
+- url: https://verituity.com/solution-verification-as-a-service
+  status: 200

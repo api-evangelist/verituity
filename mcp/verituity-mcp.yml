@@ -1,0 +1,69 @@
+generated: '2026-09-02'
+method: derived
+status: candidate
+source: >-
+  Derived from the operations Verituity documents at https://verituity.com/developers. No MCP
+  server exists — this is a candidate shape only.
+note: >-
+  NOTHING IS PUBLISHED. Verituity ships no hosted MCP endpoint and no stdio MCP package: there is no
+  mcp.verituity.com (NXDOMAIN), /mcp and /v1/mcp on the published API host both 404, and no npm or
+  PyPI package of any kind exists. The tools below are a CANDIDATE derivation from the two
+  documented REST operations, recorded so the shape is on file if Verituity ever ships one. No
+  `MCPServer` pointer is emitted in apis.yml, because emitting one would credit Verituity with an
+  agent surface it does not operate.
+deployment:
+  mode: none
+  endpoint: null
+  install: null
+  package: null
+  auth: unknown
+  verified: probed
+  note: >-
+    Probed, not assumed. If Verituity did ship a server, the auth model would be OAuth 2.0
+    client-credentials (bearer) in sandbox and certificate-bound mTLS in production — but no MCP
+    authorization surface is published, and neither host serves an RFC 9728
+    oauth-protected-resource document.
+server: null
+tools:
+- name: verify_payee
+  status: candidate
+  description: >-
+    Run one or more verification modules against a payee and an optional bank account, and return a
+    normalized decision, tier and reason_code per module.
+  source_operation: 'POST /v1/verifications (documented at https://verituity.com/developers)'
+  input_schema_source: >-
+    Would inherit the documented request body: modules[] (organization_identity,
+    individual_identity, payment_method, payee_qualification), payee{type, name, address, email,
+    phone, date_of_birth, tax_id, payment_account{routing_number, account_number}}.
+  consequence: >-
+    CONSEQUENTIAL. Each call is billed per module per inquiry ($1.00-$3.00), so an agent calling
+    this tool spends real money on every invocation. Any real server should require the
+    Idempotency-Key passthrough that the REST API supports.
+- name: get_verification
+  status: candidate
+  description: Fetch a previously created verification inquiry by id, to collect an asynchronous result.
+  source_operation: 'GET /v1/verifications/{id} (documented as the poll_url on the 202 response)'
+  input_schema_source: 'verification id (sandbox prefix vrf_sbx_)'
+  consequence: read-only
+coverage:
+  documented_operations: 2
+  tools_derived: 2
+  note: >-
+    Only the Verify service has a documented API. Verituity's other five services — Connect, Detect,
+    Eligibility, Pay and Explain — have no public endpoints, so no tools can be derived for them
+    even though they are where the consequential actions (holding, releasing and routing payments)
+    actually live.
+probes:
+- url: https://mcp.verituity.com
+  status: NXDOMAIN
+- url: https://platform.dev.verituityplatform.com/mcp
+  status: 404
+- url: https://platform.dev.verituityplatform.com/v1/mcp
+  status: 404
+- url: https://platform.dev.verituityplatform.com/sse
+  status: 404
+- url: https://registry.npmjs.org/-/v1/search?text=verituity
+  status: 200
+  note: no MCP package
+x-evidence:
+  checked: '2026-09-02'

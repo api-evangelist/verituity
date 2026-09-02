@@ -1,0 +1,74 @@
+generated: '2026-09-02'
+method: searched
+source: >-
+  Direct queries against the public package registry metadata endpoints, plus the full
+  verituity.com surface (sitemap walked, every page fetched) and a GitHub search.
+package_count: 0
+official_sdk_count: 0
+packages: []
+note: >-
+  NO CLIENT LIBRARIES EXIST. Verituity ships no SDK in any language and has no public source
+  repository. Its developer portal offers raw cURL / fetch / requests snippets instead — which is a
+  deliberate and reasonable choice for a single-endpoint API, but it means there is nothing to
+  version, and no SDK release date that could serve as a currency signal for this API. No `SDKs`
+  pointer is emitted in apis.yml, because there is no SDK to point at.
+registries_probed:
+- registry: npm
+  endpoint: https://registry.npmjs.org/-/v1/search?text=verituity
+  status: 200
+  matches: 0
+  note: >-
+    One unrelated result (`embedded-microservice-test`, last published 2023-01-26) matched on
+    description text only. No Verituity-authored or Verituity-scoped package exists.
+- registry: pypi
+  endpoint: https://pypi.org/pypi/verituity/json
+  status: 404
+  matches: 0
+- registry: rubygems
+  endpoint: https://rubygems.org/api/v1/search.json?query=verituity
+  status: 200
+  matches: 0
+- registry: nuget
+  endpoint: https://azuresearch-usnc.nuget.org/query?q=verituity
+  status: 200
+  matches: 0
+- registry: packagist
+  endpoint: https://packagist.org/search.json?q=verituity
+  status: 200
+  matches: 0
+- registry: crates.io
+  matches: 0
+- registry: maven-central
+  matches: 0
+- registry: pkg.go.dev
+  matches: 0
+source_control:
+  github_org: null
+  probes:
+  - url: https://api.github.com/orgs/verituity
+    status: 404
+  - url: 'https://api.github.com/search/repositories?q=verituity'
+    status: 200
+    note: >-
+      12 results, none belonging to Verituity Inc. — all are unrelated projects matching the string
+      "veritus", plus this profile repository itself.
+  note: >-
+    Verituity has no GitHub organization and links to no source repository from its site. No
+    `GitHubOrganization` pointer is emitted.
+cdn_distribution:
+  present: false
+consequence: >-
+  For an agent, the absence is more informative than a stale SDK would be: there is no version to
+  pin, no changelog attached to a release, and no published artifact whose date could reveal
+  whether the API has moved. Currency for this API can only be read from the docs page, which
+  carries no date either.
+x-evidence:
+- url: https://registry.npmjs.org/-/v1/search?text=verituity
+  status: 200
+- url: https://pypi.org/pypi/verituity/json
+  status: 404
+- url: https://api.github.com/orgs/verituity
+  status: 404
+- url: https://verituity.com/developers
+  status: 200
+  note: 'code samples only (cURL / Node / Python); no "SDKs" or "Libraries" section anywhere on the site'

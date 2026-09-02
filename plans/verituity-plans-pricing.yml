@@ -1,0 +1,79 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  Verituity publishes NO tiered plan page — there is no /pricing (404) and the enterprise motion is
+  "Request a Demo". What it does publish, unusually, is a per-unit RATE CARD on its developer
+  portal: each verification module carries a printed price per inquiry, and the price changes with
+  the tier the payload triggers. That is real, machine-actionable pricing, so it is recorded as the
+  plan surface here rather than reporting a bare zero.
+model: usage-based (per module, per inquiry)
+currency: USD
+billing_period: null
+plan_count: 0
+plans: []
+plans_note: >-
+  plan_count is 0 because Verituity publishes no named subscription tiers (no Free/Pro/Enterprise
+  ladder, no included quota, no overage rate, no committed spend). Access is arranged through a
+  sales conversation.
+rate_card:
+  unit: inquiry
+  billed_per: module
+  tier_rule: >-
+    Dual-tier modules price at `basic` by default and at `enhanced` when the payload carries the
+    fields that unlock the deeper check. The tier is therefore chosen by what you send, not by what
+    you subscribe to.
+  items:
+  - module: organization_identity
+    label: Organization Identity
+    tier_type: dual
+    basic: 1.25
+    enhanced: 2.50
+    enhanced_when: 'payload includes tax_id or routing_number'
+  - module: individual_identity
+    label: Individual Identity
+    tier_type: single
+    basic: 1.00
+    enhanced: null
+  - module: payment_method
+    label: Payment Method Validation
+    tier_type: dual
+    basic: 1.50
+    enhanced: 3.00
+    enhanced_when: 'payload includes tax_id'
+  - module: payee_qualification
+    label: Payee Eligibility (PQS)
+    tier_type: quoted
+    basic: null
+    enhanced: null
+    note: 'Published as "TBD / inquiry — PQS · quoted". Priced by quote, not on the rate card.'
+billing_semantics:
+  granularity: >-
+    "Pay only for what runs. Billed per module, per inquiry, on the tier that actually executed.
+    No kitchen-sink payloads."
+  idempotency: 'Idempotent retries are not re-billed.'
+  test_mode: >-
+    Sandbox traffic is never billed. The response carries billing.test_mode: true,
+    billing.billed: false, and a would_bill[] array listing {module, tier, amount} — so a caller
+    can price a production run exactly, from a free sandbox call, before spending anything.
+  overage: null
+  minimums: null
+free_tier:
+  exists: false
+  sandbox_free: true
+  note: >-
+    Sandbox access is described as instantly provisioned and never billed, but the portal states the
+    explorer's responses are simulated and its keys "will not authenticate against the API" —
+    live sandbox access is requested ("Ask us about live sandbox access").
+enterprise_gate:
+  present: true
+  cta: Request a Demo
+  contact: info@verituity.com
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+  note: per-module prices and tier rules printed on the page and in its provider-authored explorer source
+- url: https://verituity.com/pricing
+  status: 404
+  note: no standalone pricing page exists

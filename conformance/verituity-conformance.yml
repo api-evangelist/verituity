@@ -1,0 +1,176 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/
+docs: https://verituity.com/
+note: >-
+  Verituity publishes a named compliance block on its homepage and names the standards its ingest
+  layer normalizes to on the Connect and Verification-as-a-Service pages. It publishes no OpenAPI,
+  so no conformance below is derived from a contract — each entry cites the page that states it.
+  Nothing is asserted that Verituity does not claim in its own words.
+
+standards:
+- id: oauth2
+  name: OAuth 2.0 (client credentials)
+  conforms: true
+  evidence:
+    claim: '"Creates an OAuth 2.0 machine-to-machine client scoped to the sandbox."'
+    url: https://verituity.com/developers
+  note: >-
+    The grant is named, but no token endpoint, no scope list and no RFC 8414 discovery document is
+    published, so an agent cannot machine-discover the authorization server.
+- id: rfc8705
+  name: 'RFC 8705 — OAuth 2.0 Mutual-TLS and Certificate-Bound Access Tokens'
+  conforms: true
+  evidence:
+    claim: '"Switch to mTLS (RFC 8705, certificate-bound) before going live." / "Certificate-bound access tokens (RFC 8705) satisfy strict federal identity assurance out of the box."'
+    url: https://verituity.com/developers
+  note: >-
+    An explicit RFC citation on a developer page is rare and is the strongest standards signal on
+    this API. It is a claim, not an observed handshake — production access is gated.
+- id: oidc
+  name: OpenID Connect
+  conforms: false
+  evidence:
+    probe: https://verituity.com/.well-known/openid-configuration
+    status: 404
+  note: No OIDC discovery document on either host.
+- id: rfc9457
+  name: 'RFC 9457 — Problem Details for HTTP APIs'
+  conforms: false
+  evidence:
+    observed: '{"error":"unauthorized","status":401} with content-type application/json'
+    url: https://platform.dev.verituityplatform.com/v1/verifications
+  note: Custom flat error envelope; not application/problem+json.
+- id: idempotency
+  name: Idempotency-Key request header
+  conforms: true
+  evidence:
+    claim: 'Idempotency-Key header emitted on every generated code sample; "Idempotent retries are not re-billed."'
+    url: https://verituity.com/developers
+  note: >-
+    The header is used, but no retention window or replay-conflict behaviour is documented, so this
+    is not a claim of conformance to draft-ietf-httpapi-idempotency-key-header.
+- id: rfc9116
+  name: 'RFC 9116 — security.txt'
+  conforms: false
+  evidence:
+    probe: https://verituity.com/.well-known/security.txt
+    status: 404
+- id: pagination
+  name: Pagination convention
+  conforms: false
+  evidence:
+    note: No collection endpoint is published, so no pagination surface exists.
+
+domain_standards:
+- id: iso20022
+  name: ISO 20022 — Universal financial industry message scheme
+  regime: payments
+  conforms: true
+  role: canonical internal payment record and ingest/egress normalization target
+  evidence:
+    claim: >-
+      "Legacy formats normalize to ISO 20022 once, and every service downstream reads one canonical
+      payment record." / "Files transform to the standard on the way in. No translating later." /
+      "Normalized to ISO 20022, so every service downstream reads one canonical record."
+    urls:
+    - https://verituity.com/
+    - https://verituity.com/connect
+    - https://verituity.com/solution-verification-as-a-service
+  strength: >-
+    STATED ON THE PRODUCT PAGES, NOT VISIBLE IN A CONTRACT. Verituity's REST verification API
+    exposes its own JSON payee/verification shape, not ISO 20022 message types — the standard sits
+    at the file-ingest layer (Connect), which has no public API reference. A buyer who already
+    speaks ISO 20022 can hand Verituity a pain.001-shaped payment run; a buyer integrating the
+    REST API does not touch ISO 20022 at all. Both facts are true and worth separating.
+  contract_evidence: null
+- id: nacha
+  name: NACHA — ACH account validation rules
+  regime: payments
+  conforms: true
+  role: account validation applied before an ACH debit or credit
+  evidence:
+    claim: '"NACHA — Account validation for ACH originators, applied before the debit or credit."'
+    url: https://verituity.com/
+  note: >-
+    Directly relevant to the payment_method verification module: NACHA's WEB debit account
+    validation rule is the regulatory reason that module exists as a product.
+  contract_evidence: null
+- id: nacha-file-formats
+  name: NACHA batch file format (ingest)
+  regime: payments
+  conforms: true
+  role: accepted inbound batch format
+  evidence:
+    claim: '"Fixed-width, delimited, NACHA and legacy batch formats, or real-time REST."'
+    url: https://verituity.com/connect
+  contract_evidence: null
+- id: ofac-sanctions-screening
+  name: OFAC / sanctions and program list screening
+  regime: payments
+  conforms: true
+  role: eligibility screening data source, with WATCHLIST_POTENTIAL_MATCH as the returned code
+  evidence:
+    claim: '"A match on OFAC disqualifies. A missing SAM registration disqualifies."'
+    url: https://verituity.com/pqs
+  contract_evidence: >-
+    errors/verituity-decline-codes.yml — WATCHLIST_POTENTIAL_MATCH is a published reason_code on the
+    watchlist_hit test path, so the screening outcome IS observable in the API response shape.
+
+certifications:
+- id: soc2
+  name: SOC 2
+  claimed: true
+  detail: '"Independently audited controls for security, availability, and confidentiality."'
+  url: https://verituity.com/
+  report_available: false
+  note: No trust center, no report request flow, and no auditor named. The claim is a homepage badge.
+- id: pcidss
+  name: PCI DSS
+  claimed: true
+  detail: '"The highest service provider tier for handling card data."'
+  url: https://verituity.com/
+  level_stated: 'Service Provider Level 1 (implied by "highest service provider tier"; the level number is not printed)'
+  note: Relevant to the push-to-card and virtual-card payout rails.
+- id: ada-wcag
+  name: ADA / WCAG
+  claimed: true
+  detail: '"Accessible payee enrollment and payment selection."'
+  url: https://verituity.com/
+  version_stated: false
+  note: No WCAG version or conformance level (A/AA/AAA) and no VPAT/ACR is published.
+- id: public-sector-review
+  name: 'Public-sector security review posture (IG / GAO / agency)'
+  claimed: true
+  detail: '"Built for IG, GAO, and agency security review. Not reconstructed for it."'
+  url: https://verituity.com/
+  note: >-
+    A posture statement, not a certification. No FedRAMP authorization, StateRAMP listing, ATO or
+    FIPS validation is claimed anywhere on the site, and none was found.
+
+not_claimed:
+  note: >-
+    Recorded so a reader can tell a genuine absence from an unchecked field. None of the following
+    appear anywhere on verituity.com, and none is asserted here.
+  items: [ISO 27001, FedRAMP, StateRAMP, HIPAA, GDPR, CCPA, HITRUST, FAPI, PSD2, FDX, SCIM, OData]
+
+gaps:
+- No trust center or compliance portal; certifications are homepage badges with no evidence path.
+- No security.txt and no published vulnerability disclosure policy.
+- >-
+  ISO 20022 conformance cannot be verified from any published contract, because no contract is
+  published. The claim is credible and specific, but a buyer must take it on the docs.
+
+x-evidence:
+- url: https://verituity.com/
+  status: 200
+- url: https://verituity.com/connect
+  status: 200
+- url: https://verituity.com/pqs
+  status: 200
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/.well-known/security.txt
+  status: 404
+- url: https://verituity.com/.well-known/openid-configuration
+  status: 404

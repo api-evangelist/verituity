@@ -1,0 +1,173 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  Cross-cutting runtime semantics for the Verituity Verification API, read from Verituity's own
+  developer portal (the request builder, the code-sample generator and the response viewer, which
+  are provider-authored and show the exact headers and payload shapes the API expects). No OpenAPI
+  is published, so nothing here is derived from a spec.
+
+auth:
+  style: OAuth 2.0 client-credentials bearer token; certificate-bound mTLS (RFC 8705) in production
+  header: 'Authorization: Bearer <access_token>'
+  see: authentication/verituity-authentication.yml
+
+idempotency:
+  supported: true
+  header: Idempotency-Key
+  required: false
+  value_format: >-
+    Opaque client-generated string. Verituity's own sample generator emits an `idmp_` prefix
+    (e.g. idmp_<random>), regenerated per send.
+  scope: per request
+  retention_window: null
+  retention_note: >-
+    NOT PUBLISHED. The portal states the billing consequence — "Idempotent retries are not
+    re-billed" — but never states how long a key is honored. An integrator cannot tell whether a
+    retry an hour later still de-duplicates.
+  billing_effect: >-
+    A repeated request carrying the same Idempotency-Key is not billed again. This is the strongest
+    documented reason to send the header on a paid, per-inquiry API.
+  evidence: https://verituity.com/developers
+
+pagination:
+  supported: false
+  note: >-
+    No collection endpoint is published. The documented surface is a single POST inquiry plus a
+    single-resource poll, so there is nothing to paginate.
+
+versioning:
+  style: URI path
+  current: v1
+  base_url: https://platform.dev.verituityplatform.com/v1
+  header_versioning: false
+  see: lifecycle/verituity-lifecycle.yml
+
+request:
+  content_type: application/json
+  envelope:
+    modules: array of module ids to run
+    payee:
+      type: organization | individual
+      fields: [name, address, email, phone, date_of_birth, tax_id]
+      payment_account: {routing_number, account_number}
+  note: >-
+    `date_of_birth` is sent only for an individual payee. Presence of `tax_id` (and, for
+    organization identity, `routing_number`) is what promotes a dual-tier module from the `basic`
+    tier to the `enhanced` tier — which is also what changes the price. The tier is therefore a
+    function of the payload, not a request parameter.
+
+response:
+  content_type: application/json
+  envelope:
+    id: 'verification id (sandbox ids are prefixed vrf_sbx_)'
+    object: verification
+    livemode: boolean
+    status: complete | pending
+    latency_ms: integer
+    results: 'map of module id -> {decision, tier, reason_code, score}'
+    billing: '{test_mode, billed, would_bill[{module, tier, amount}]}'
+  normalization: >-
+    THE CENTRAL CONVENTION. Every module answers in the same shape — decision, tier, reason_code —
+    "regardless of which underlying provider executed." Verituity states this explicitly as a
+    stability guarantee: "Write your integration once; never rewrite it when a data source changes."
+  status_codes:
+    '200': synchronous inquiry complete
+    '202': inquiry accepted, result pending
+    '401': unauthorized (observed live)
+
+async:
+  supported: true
+  trigger: >-
+    Long-running inquiries return status `pending` with HTTP 202 rather than blocking.
+  poll:
+    field: poll_url
+    operation: GET /v1/verifications/{id}
+  estimated_completion: '<=5 min'
+  webhook_alternative: >-
+    The portal offers "Poll GET /v1/verifications/{id} or register a webhook" as the two ways to
+    collect an async result, but publishes no webhook registration endpoint, event names or payload
+    schema. See asyncapi/verituity-webhooks.yml.
+
+errors:
+  envelope: '{"error": "<slug>", "status": <http_status>}'
+  format: custom (NOT RFC 9457 application/problem+json)
+  observed: '{"error":"unauthorized","status":401}'
+  decision_vs_error: >-
+    A failed verification is NOT an error. A denied or held payee returns 200 with
+    decision: deny | review and a reason_code — the reason_code registry, not the HTTP status, is
+    where an agent reads why. See errors/verituity-decline-codes.yml.
+  see:
+  - errors/verituity-problem-types.yml
+  - errors/verituity-decline-codes.yml
+
+rate_limits:
+  published: false
+  headers: null
+  see: rate-limits/verituity-rate-limits.yml
+
+request_tracing:
+  request_id_header: null
+  note: >-
+    No request-id or correlation header is documented. The response `id` (vrf_*) is the only
+    handle published for tracing an inquiry.
+
+latency:
+  documented_target: <300ms p95
+  response_field: latency_ms
+  note: Verituity publishes p95 as a headline figure on the developer portal, not as a contractual SLA.
+
+sandbox:
+  test_mode_headers:
+  - X-Sandbox-Test-Outcome
+  - X-Sandbox-Test-Path
+  see: sandbox/verituity-sandbox.yml
+
+dry_run_mode:
+  state: documented
+  mechanism: >-
+    Sandbox mode is the rehearsal surface: `livemode: false`, `billing.test_mode: true`,
+    `billed: false`, and a `would_bill[]` array that shows exactly what the same call would have
+    cost in production. That is a true dry run of the commercial consequence, not just of the
+    response shape.
+  note: >-
+    There is no documented dry-run switch on the LIVE environment — rehearsal requires the separate
+    sandbox base URL and sandbox credentials.
+
+reversibility:
+  state: na
+  grade: na
+  rationale: >-
+    The only publicly documented operations are POST /v1/verifications (create an inquiry) and
+    GET /v1/verifications/{id} (read it). Neither mutates state in a payee, an account or a
+    payment that a subsequent call could cancel, void, refund or restore, so there is no reversal
+    path to document and none is missing. The consequence of a call is informational (a decision)
+    plus a per-inquiry charge, and the charge is guarded by Idempotency-Key rather than by a
+    reversal.
+  write_surfaces:
+  - operation: POST /v1/verifications
+    mutates: 'creates a verification inquiry record and incurs a per-module charge'
+    reversal_operation: null
+    window: null
+    note: >-
+      No cancel/void/refund operation is published for an inquiry. The documented protection
+      against an accidental duplicate charge is idempotency ("Idempotent retries are not
+      re-billed"), not reversal.
+  out_of_scope:
+  - surface: Pay (payment orchestration, ACH/RTP/wire/push-to-card execution)
+    note: >-
+      Verituity's Pay service plainly HAS a consequential write surface — money moves on a rail —
+      and its marketing pages describe hold, review and release controls plus "control of funds
+      comes before routing." But Pay has no public API reference, no endpoints and no documented
+      reversal window, so nothing about its reversibility is asserted here. NEVER infer a
+      cancellation window for a payment surface from marketing copy.
+
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/developers.js
+  status: 200
+  note: provider-authored explorer source; carries the exact header set, payload builder and response shape
+- url: https://platform.dev.verituityplatform.com/v1/verifications
+  status: 401

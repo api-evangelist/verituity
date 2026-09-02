@@ -1,0 +1,188 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  Verituity publishes working request and response examples for its verification API in three
+  languages plus a rendered normalized response. They are transcribed here verbatim in shape; the
+  synthetic sample identifiers Verituity uses as form filler (tax IDs, account numbers) are
+  replaced with obvious placeholders, and no credential material is reproduced.
+examples:
+- id: create-verification-curl
+  operation: POST /v1/verifications
+  language: shell
+  source: https://verituity.com/developers
+  code: |
+    curl -X POST https://platform.dev.verituityplatform.com/v1/verifications \
+      -H 'Authorization: Bearer <ACCESS_TOKEN>' \
+      -H 'Content-Type: application/json' \
+      -H 'Idempotency-Key: idmp_<random>' \
+      -H 'X-Sandbox-Test-Outcome: approve' \
+      -H 'X-Sandbox-Test-Path: default' \
+      -d '{"modules":["organization_identity","payment_method"],"payee":{"type":"organization","name":"Northwind Logistics LLC","address":"1200 Harbor Blvd, Tacoma, WA 98402","email":"ap@northwindlogistics.com","phone":"+1 253 555 0142","payment_account":{"routing_number":"125000024","account_number":"<ACCOUNT_NUMBER>"}}}'
+- id: create-verification-node
+  operation: POST /v1/verifications
+  language: javascript
+  source: https://verituity.com/developers
+  code: |
+    const res = await fetch("https://platform.dev.verituityplatform.com/v1/verifications", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer <ACCESS_TOKEN>",
+        "Content-Type": "application/json",
+        "Idempotency-Key": "idmp_<random>",
+        "X-Sandbox-Test-Outcome": "approve",
+        "X-Sandbox-Test-Path": "default"
+      },
+      body: JSON.stringify({
+        modules: ["organization_identity", "payment_method"],
+        payee: {
+          type: "organization",
+          name: "Northwind Logistics LLC",
+          address: "1200 Harbor Blvd, Tacoma, WA 98402",
+          payment_account: {
+            routing_number: "125000024",
+            account_number: "<ACCOUNT_NUMBER>"
+          }
+        }
+      })
+    });
+    const verification = await res.json();
+- id: create-verification-python
+  operation: POST /v1/verifications
+  language: python
+  source: https://verituity.com/developers
+  code: |
+    import requests
+
+    res = requests.post(
+        "https://platform.dev.verituityplatform.com/v1/verifications",
+        headers={
+            "Authorization": "Bearer <ACCESS_TOKEN>",
+            "Content-Type": "application/json",
+            "Idempotency-Key": "idmp_<random>",
+            "X-Sandbox-Test-Outcome": "approve",
+            "X-Sandbox-Test-Path": "default",
+        },
+        json={
+            "modules": ["organization_identity", "payment_method"],
+            "payee": {
+                "type": "organization",
+                "name": "Northwind Logistics LLC",
+                "address": "1200 Harbor Blvd, Tacoma, WA 98402",
+            },
+        },
+    )
+    verification = res.json()
+- id: response-complete-200
+  operation: POST /v1/verifications
+  kind: response
+  http_status: 200
+  source: https://verituity.com/developers
+  body: |
+    {
+      "id": "vrf_sbx_<id>",
+      "object": "verification",
+      "livemode": false,
+      "status": "complete",
+      "latency_ms": 214,
+      "results": {
+        "organization_identity": {
+          "decision": "approve",
+          "tier": "enhanced",
+          "reason_code": "ORG_MATCH_CONFIRMED",
+          "score": 0.96
+        },
+        "payment_method": {
+          "decision": "approve",
+          "tier": "enhanced",
+          "reason_code": "ACCOUNT_OPEN_OWNER_MATCH",
+          "score": 0.94
+        }
+      },
+      "billing": {
+        "test_mode": true,
+        "billed": false,
+        "would_bill": [
+          {"module": "organization_identity", "tier": "enhanced", "amount": 2.50},
+          {"module": "payment_method", "tier": "enhanced", "amount": 3.00}
+        ]
+      }
+    }
+- id: response-pending-202
+  operation: POST /v1/verifications
+  kind: response
+  http_status: 202
+  source: https://verituity.com/developers
+  note: returned when X-Sandbox-Test-Outcome is `async`; the asynchronous IOU path
+  body: |
+    {
+      "id": "vrf_sbx_<id>",
+      "object": "verification",
+      "livemode": false,
+      "status": "pending",
+      "latency_ms": 188,
+      "received": ["organization_identity", "payment_method"],
+      "poll_url": "/v1/verifications/vrf_sbx_<id>",
+      "estimated_completion": "<=5 min"
+    }
+- id: response-normalized-vaas
+  operation: POST /v1/verifications
+  kind: request-and-response
+  source: https://verituity.com/solution-verification-as-a-service
+  note: the normalized-response illustration published on the Verification-as-a-Service page
+  request: |
+    {
+      "payee": {
+        "name": "Harbor Health Systems",
+        "type": "business",
+        "account_number": "****6526",
+        "routing_number": "199692965"
+      },
+      "verifications": ["organization_identity", "payment_method"]
+    }
+  response: |
+    {
+      "object": "verification",
+      "status": "complete",
+      "latency_ms": 180,
+      "results": {
+        "organization_identity": {
+          "decision": "approve",
+          "tier": "enhanced",
+          "reason_code": "ORG_MATCH_CONFIRMED",
+          "score": 0.96
+        },
+        "payment_method": {
+          "decision": "approve",
+          "tier": "enhanced",
+          "reason_code": "OWNER_MATCH_CONFIRMED",
+          "score": 0.94
+        }
+      }
+    }
+- id: response-unauthorized-401
+  operation: POST /v1/verifications
+  kind: response
+  http_status: 401
+  method: probed
+  source: https://platform.dev.verituityplatform.com/v1/verifications
+  note: observed live on an unauthenticated request
+  body: |
+    {"error":"unauthorized","status":401}
+inconsistency:
+  note: >-
+    WORTH FLAGGING TO THE PROVIDER. The two published request shapes disagree. The developer portal
+    sends `{"modules": [...], "payee": {...}}` with `payee.type: "organization"`, while the
+    Verification-as-a-Service page sends `{"verifications": [...], "payee": {...}}` with
+    `payee.type: "business"`. Both are Verituity's own documentation of the same endpoint. Without
+    an OpenAPI there is nothing to arbitrate between them, and an integrator has to guess.
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/developers.js
+  status: 200
+- url: https://verituity.com/solution-verification-as-a-service
+  status: 200
+- url: https://platform.dev.verituityplatform.com/v1/verifications
+  status: 401

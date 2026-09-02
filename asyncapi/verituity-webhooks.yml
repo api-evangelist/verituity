@@ -1,0 +1,45 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+status: mentioned-only
+event_count: 0
+asyncapi_published: false
+note: >-
+  Verituity mentions webhooks exactly once, as the alternative to polling for an asynchronous
+  verification result: "Poll GET /v1/verifications/{id} or register a webhook." That is the entire
+  published webhook surface. There is no registration endpoint, no event name, no payload schema,
+  no signature or verification scheme, no retry or delivery policy, and no AsyncAPI document
+  anywhere on either host. A developer cannot act on this sentence.
+  NO `Webhooks` AND NO `AsyncAPI` POINTER IS EMITTED in apis.yml: a pointer would assert a usable
+  event surface, and one clause in a UI hint is not one. This file records the mention so a future
+  round can tell "checked, nothing to record" from "not checked".
+events: []
+registration:
+  endpoint: null
+  documented: false
+delivery:
+  signature_scheme: null
+  retry_policy: null
+  ordering: null
+alternative_in_use:
+  mechanism: polling
+  operation: GET /v1/verifications/{id}
+  trigger: 'HTTP 202 with status pending and a poll_url'
+  estimated_completion: '<=5 min'
+  note: >-
+    Polling is the only documented, actionable way to collect an async result today. See
+    conventions/verituity-conventions.yml.
+probes:
+- url: https://verituity.com/asyncapi.yaml
+  status: 404
+- url: https://verituity.com/.well-known/api-catalog
+  status: 404
+- url: https://platform.dev.verituityplatform.com/.well-known/api-catalog
+  status: 404
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+- url: https://verituity.com/developers.js
+  status: 200
+  note: 'the single webhook reference appears in the async decision view: "Poll GET {poll_url} or register a webhook."'

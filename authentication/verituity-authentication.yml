@@ -1,0 +1,68 @@
+generated: '2026-09-02'
+method: searched
+source: https://verituity.com/developers
+docs: https://verituity.com/developers
+note: >-
+  DERIVED FROM DOCS, NOT FROM A SPEC. Verituity publishes no OpenAPI, so there are no
+  securitySchemes to read. Everything below is stated on Verituity's own developer portal, or was
+  observed on a live unauthenticated request to the published base URL.
+schemes:
+- id: oauth2_m2m
+  type: oauth2
+  flow: client_credentials
+  description: >-
+    "Creates an OAuth 2.0 machine-to-machine client scoped to the sandbox." Sandbox provisioning
+    issues an api_client_id and a client_secret; the secret is shown once and, per the portal,
+    "Verituity never retains it." The resulting access token is presented as
+    `Authorization: Bearer <token>`.
+  credential_fields:
+  - api_client_id
+  - client_secret
+  token_endpoint: null
+  token_endpoint_note: >-
+    NOT PUBLISHED. The portal names the grant but does not state a token URL, and neither host
+    serves /.well-known/oauth-authorization-server or /.well-known/oauth-protected-resource
+    (both 404). An integrator must obtain the token endpoint from Verituity directly.
+  scopes_published: false
+  scopes_note: >-
+    The portal says the sandbox client is "scoped to the sandbox" but publishes no named scope
+    list, so no scopes/ artifact is emitted rather than inventing one.
+- id: mtls
+  type: mutualTLS
+  description: >-
+    Certificate-bound access tokens per RFC 8705, presented as the production posture:
+    "Switch to mTLS (RFC 8705, certificate-bound) before going live." The portal frames this as
+    the control that satisfies strict federal identity assurance out of the box.
+  standard: RFC 8705 (OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens)
+  environment: production
+transport:
+  header: Authorization
+  format: Bearer <access_token>
+  observed_challenge: 'WWW-Authenticate: Bearer realm="verification-api-dev"'
+environments:
+- name: sandbox
+  base_url: https://platform.dev.verituityplatform.com/v1
+  auth: oauth2 client_credentials (bearer)
+  key_prefixes:
+    client_id: vc_sbx_
+    secret: sk_sbx_
+  note: >-
+    Prefixes are the documented FORMAT only; the portal states the keys its explorer generates are
+    examples that "will not authenticate against the API."
+- name: production
+  base_url: null
+  auth: mTLS certificate-bound OAuth 2.0 (RFC 8705)
+  note: >-
+    No production base URL is published anywhere on verituity.com. Live access is arranged through
+    the demo/sales flow ("Ask us about live sandbox access").
+x-evidence:
+- url: https://verituity.com/developers
+  status: 200
+  note: developer portal; states OAuth 2.0 M2M, mTLS RFC 8705, one-time secret, per-client isolation
+- url: https://platform.dev.verituityplatform.com/v1/verifications
+  status: 401
+  note: >-
+    Live unauthenticated POST returned {"error":"unauthorized","status":401} with
+    WWW-Authenticate: Bearer realm="verification-api-dev" (server: istio-envoy)
+- url: https://platform.dev.verituityplatform.com/.well-known/oauth-authorization-server
+  status: 404
