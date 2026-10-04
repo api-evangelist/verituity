@@ -27,7 +27,7 @@ tags:
 - Fraud Prevention
 - Payment Integrity
 - Banking
-- Financial-Services
+- Financial Services
 - Public Sector
 - ISO 20022
 - Compliance
@@ -46,6 +46,7 @@ tags_raw:
 - ISO 20022
 - Compliance
 - Company
+- Financial-Services
 apis:
 - name: Verituity Verification API
   description: >-
