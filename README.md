@@ -64,5 +64,117 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Verituity is a company surfaced via the API Evangelist harvest backlog (source: secondary-market) and added to the network as a stub for full-pipeline profiling.
-- https://www.nasdaqprivatemarket.com/
+Verituity is a McLean, Virginia payment integrity platform that verifies the file, the payee, the account and the payment instruction at the moment of authorization, before money moves, across any payment rail. The platform is organized as six services — Connect (ingest any batch file or REST call and normalize it to ISO 20022), Detect (duplicate and out-of-pattern screening), Eligibility (payee qualification against OFAC, SAM and payer-private lists), Verify (identity and bank account ownership verification), Pay (rail optionality and orchestration across ACH, RTP, wire, push-to-card, virtual card, PayPal, Zelle, Venmo, check and cross-border) and Explain (evidence and lineage on every decision). Its developer-facing product is Verification-as-a-Service, a single POST /v1/verifications call that runs four verification modules and returns one normalized decision/tier/reason_code response regardless of which underlying data source answered.
+
+**Areas:** Payments · Payouts · Disbursements · Identity Verification · Account Verification · Fraud Prevention · Payment Integrity · Banking · Financial Services · Public Sector · ISO 20022 · Compliance
+
+## Verituity on APIs.io
+
+Everything profiled for Verituity is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/verituity/](https://apis.io/providers/verituity/)** — or go straight to one of the APIs or properties below.
+
+### APIs (1)
+
+- [Verituity Verification API](https://apis.io/apis/verituity/verituity-verification-api/) — Verification-as-a-Service. A single POST /v1/verifications call declares which verification modules to run — organization_identity, individual_identity,…
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### AsyncAPI (1)
+
+Event-driven and webhook contracts.
+
+- [Verituity Webhooks](https://apis.io/asyncapis/verituity/verituity-webhooks/)
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [verituity-mcp.yml](https://apis.io/servers/verituity/verituity-mcp-yml/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Verituity Authentication](https://apis.io/security/verituity/verituity-authentication/)
+- [Verituity Domain Security](https://apis.io/security/verituity/verituity-domain-security/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Verituity Plans Pricing](https://apis.io/plans/verituity/verituity-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Verituity Rate Limits](https://apis.io/rate-limits/verituity/verituity-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://verituity.com/)
+- [Documentation](https://verituity.com/developers)
+- [Getting started](https://verituity.com/developers)
+- [API reference](https://verituity.com/developers)
+- [Pricing](https://verituity.com/developers)
+- [Blog](https://verituity.com/blog)
+- [Terms of service](https://verituity.com/terms)
+- [Privacy policy](https://verituity.com/privacy)
+
+## API Evangelist rating
+
+**Kin Score 41.1** — developing · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 66.1 |
+| Contract quality | 45.3 |
+| Contract governance | 18.2 |
+| Operational transparency | 0.0 |
+| Developer ergonomics | 59.5 |
+| Access clarity | 39.5 |
+
+**Agent readiness 29.7** — agent-ready
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | — |
+| MCP Server | — |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | documented (partial credit) |
+| Error Semantics | documented (partial credit) |
+| OpenAPI Examples | documented (partial credit) |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | yes |
+| Agent Skills | — |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+| Pagination Ratio | na |
+| Operation Distinctiveness | na |
+
+**Regulatory alignment 28.3** — Banking & Open Finance
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/verituity/](https://apis.io/providers/verituity/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Verituity: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/verituity/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
